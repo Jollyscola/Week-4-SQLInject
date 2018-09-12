@@ -1,5 +1,8 @@
 package dk.cphbusiness.soft.sqlinject;
 
+import static dk.cphbusiness.soft.sqlinject.PlaceHolders.field;
+import static dk.cphbusiness.soft.sqlinject.PlaceHolders.string;
+import static dk.cphbusiness.soft.sqlinject.PlaceHolders.stringList;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -10,18 +13,30 @@ import java.sql.Statement;
 public class AppMain {
 
     public static void main( String[] args ) throws SQLException, ClassNotFoundException {
-        String id = "2"; 
-        String name = "Jens"; 
-        injectSimpleStatement( id, name );
-        injectPreparedStatement( id, name );
+        try {
+          String id = "2 or 1=1"; 
+          String name = "Jens' or ''='"; 
+          injectSimpleStatement( id, name );
+          injectPreparedStatement( id, name );
+          }
+        catch (Exception e) { e.printStackTrace(); }
+        
     }
+    
+    private static void sortExample(String sortKey) {
+      String sql = "select * from junk order by "+field("name", "id")+";";
+      }
+    
+    private static void inExample(String... options) {
+      String sql = "select * from junk where name in "+stringList(options)+";";
+      }
 
     private static void injectSimpleStatement( String id, String name ) throws SQLException, ClassNotFoundException {
         System.out.println( "Simple inject" );
         try ( Connection con = getConnection();
                 Statement stmt = con.createStatement();
                 ResultSet rs = stmt.executeQuery(
-                        "SELECT * FROM junk WHERE id=" + id + " and name ='" + name + "'" ) ) {
+                        "SELECT * FROM junk WHERE id=" + id + " and name ='" + string(name) + "'" ) ) {
             while ( rs.next() ) {
                 System.out.println( "--> " + rs.getInt( "id" )
                         + " " + rs.getString( "name" )
@@ -43,11 +58,12 @@ public class AppMain {
                         + " " + rs.getString( "role" ) );
             }
         }
+
     }
 
     private static Connection getConnection() throws SQLException, ClassNotFoundException {
         Class.forName( "org.sqlite.JDBC" );
-        String path = "/Users/kasper/tmpinject.db";
+        String path = "/Users/AKA/DatSoftLyngby/SecurityFall2018/week2SQLinject/tmpinject.db";
         return DriverManager.getConnection( "jdbc:sqlite:" + path );
     }
 
